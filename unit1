@@ -1,0 +1,12 @@
+import re
+
+text = "My email is amal123@gmail.com and phone is 9876543210"
+
+# Extract email
+email = re.findall(r'\S+@\S+', text)
+
+# Extract 10-digit phone numbers
+phone = re.findall(r'\b\d{10}\b', text)
+
+print("Email:", email)
+print("Phone:", phone)
