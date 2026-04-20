@@ -1,1 +1,57 @@
+import torch
+import torch.nn as nn
 
+class SimpleRNN(nn.Module):
+    def __init__(self, input_size, hidden_size, output_size):
+        super(SimpleRNN, self).__init__()
+        self.rnn = nn.RNN(input_size, hidden_size, batch_first=True)
+        self.fc = nn.Linear(hidden_size, output_size)
+
+    def forward(self, x):
+        # x shape: (batch, seq_len, input_size)
+        out, h_n = self.rnn(x)
+        # out: (batch, seq_len, hidden_size)
+        # Taking the last time step for classification
+        out = self.fc(out[:, -1, :])
+        return out
+class SimpleLSTM(nn.Module):
+    def __init__(self, input_size, hidden_size, num_layers, output_size):
+        super(SimpleLSTM, self).__init__()
+        self.lstm = nn.LSTM(input_size, hidden_size, num_layers, batch_first=True)
+        self.fc = nn.Linear(hidden_size, output_size)
+
+    def forward(self, x):
+        # h0 and c0 default to zeros if not provided
+        out, (h_n, c_n) = self.lstm(x)
+        # Use the hidden state of the last time step
+        out = self.fc(out[:, -1, :])
+        return out
+from transformers import BertTokenizer, BertModel
+
+# Load pre-trained model and tokenizer
+tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+model = BertModel.from_pretrained('bert-base-uncased')
+
+text = "Deep learning is fascinating."
+inputs = tokenizer(text, return_tensors="pt")
+
+outputs = model(**inputs)
+# last_hidden_state contains embeddings for all tokens
+last_hidden_state = outputs.last_hidden_state
+# pooler_output is a summary of the sequence (used for classification)
+cls_embedding = outputs.pooler_output
+
+#Roberta
+from transformers import RobertaTokenizer, RobertaForSequenceClassification
+import torch
+
+# Specifically loading for a classification task
+tokenizer = RobertaTokenizer.from_pretrained('roberta-base')
+model = RobertaForSequenceClassification.from_pretrained('roberta-base', num_labels=2)
+
+inputs = tokenizer("This movie was amazing!", return_tensors="pt")
+labels = torch.tensor([1]).unsqueeze(0)  # Batch size 1
+
+outputs = model(**inputs, labels=labels)
+loss = outputs.loss
+logits = outputs.logits
