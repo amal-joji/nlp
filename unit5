@@ -11,3 +11,89 @@ def run_chatbot():
 
 if __name__ == "__main__":
     run_chatbot()
+from transformers import pipeline
+
+def run_qa():
+    qa_pipeline = pipeline("question-answering")
+
+    context = """
+    India is a country in Asia. The capital of India is New Delhi.
+    It is known for its rich cultural heritage.
+    """
+
+    question = "What is the capital of India?"
+
+    result = qa_pipeline(question=question, context=context)
+
+    print("Question:", question)
+    print("Answer:", result['answer'])
+    print("Confidence Score:", result['score'])
+
+if __name__ == "__main__":
+    run_qa()
+
+from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
+
+def run_summarization():
+    # The 'summarization' task is not recognized, and T5 models are not supported for 'text-generation' pipeline.
+    # To properly perform summarization with t5-small, we will load the tokenizer and model directly.
+    tokenizer = AutoTokenizer.from_pretrained("t5-small")
+    model = AutoModelForSeq2SeqLM.from_pretrained("t5-small")
+
+    text = """
+    Artificial Intelligence (AI) is transforming industries by automating tasks,
+    improving efficiency, and enabling smarter decision-making.
+    It is widely used in healthcare, finance, education, and more.
+    """
+
+    # T5 models often require a prefix for summarization tasks.
+    input_text = "summarize: " + text
+
+    # Tokenize the input text
+    inputs = tokenizer(input_text, return_tensors="pt", max_length=512, truncation=True)
+
+    # Generate the summary
+    # We set max_length and min_length for controlling summary length.
+    # num_beams > 1 for beam search, which often yields better quality.
+    # early_stopping=True stops generation once all beam hypotheses have finished.
+    summary_ids = model.generate(
+        inputs["input_ids"],
+        max_length=40,
+        min_length=10,
+        num_beams=4,
+        early_stopping=True
+    )
+
+    # Decode the generated summary IDs back to text
+    summary_text = tokenizer.decode(summary_ids[0], skip_special_tokens=True)
+
+    print("Original Text:\n", text)
+    print("\nGenerated Summary:\n", summary_text)
+
+if __name__ == "__main__":
+    run_summarization()
+
+from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
+
+def run_translation():
+    # The 'translation' task is not directly recognized by the pipeline, even with a specific model.
+    # To properly perform translation, we will load the tokenizer and model directly.
+    tokenizer = AutoTokenizer.from_pretrained("Helsinki-NLP/opus-mt-en-fr")
+    model = AutoModelForSeq2SeqLM.from_pretrained("Helsinki-NLP/opus-mt-en-fr")
+
+    text = "Hello, how are you?"
+
+    # Tokenize the input text
+    inputs = tokenizer(text, return_tensors="pt")
+
+    # Generate the translation
+    translated_ids = model.generate(**inputs)
+
+    # Decode the generated IDs back to text
+    translated_text = tokenizer.decode(translated_ids[0], skip_special_tokens=True)
+
+    print("Original:", text)
+    print("Translated:", translated_text)
+
+if __name__ == "__main__":
+    run_translation()
