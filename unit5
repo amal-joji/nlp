@@ -1,1 +1,13 @@
+from transformers import pipeline, Conversation
 
+def run_chatbot():
+    chatbot = pipeline("conversational")
+
+    convo = Conversation("Hello, how are you?")
+    result = chatbot(convo)
+
+    print("Chatbot Response:")
+    print(result)
+
+if __name__ == "__main__":
+    run_chatbot()
